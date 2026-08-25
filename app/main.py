@@ -13,6 +13,7 @@ from app import builder
 from app.data import games_db, parts_db
 from app.ebay import EbayPricer
 from app.pricing import BestBuyPricer
+from app.searchapi import SearchApiPricer
 
 app = FastAPI(title="PC Maker", version="0.1.0")
 app.add_middleware(
@@ -24,6 +25,7 @@ app.add_middleware(
 
 pricer = BestBuyPricer()
 ebay_pricer = EbayPricer()
+market_pricer = SearchApiPricer()
 _build_cache = {}  # (request tuple) -> (result, timestamp)
 
 
@@ -74,6 +76,7 @@ def create_builds(req: BuildRequest):
         req.require_in_stock,
         pricer.enabled,
         ebay_pricer.enabled,
+        market_pricer.enabled,
     )
     cached = _build_cache.get(key)
     if cached and time.time() - cached[1] < 600:
@@ -92,9 +95,11 @@ def create_builds(req: BuildRequest):
     except builder.BuildImpossibleError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    pricer.enrich_builds(result, require_in_stock=req.require_in_stock, ebay=ebay_pricer)
+    pricer.enrich_builds(result, require_in_stock=req.require_in_stock, ebay=ebay_pricer,
+                         market=market_pricer)
     result["live_pricing"] = pricer.enabled
     result["ebay_pricing"] = ebay_pricer.enabled
+    result["market_pricing"] = market_pricer.enabled
     _build_cache[key] = (result, time.time())
     return result
 
@@ -112,4 +117,5 @@ def health():
         "status": "ok",
         "live_pricing": pricer.enabled,
         "ebay_pricing": ebay_pricer.enabled,
+        "market_pricing": market_pricer.enabled,
     }

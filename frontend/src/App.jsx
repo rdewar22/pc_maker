@@ -250,14 +250,30 @@ function partLink(part) {
 }
 
 function priceBadge(part) {
-  if (!part.live && !part.ebay) return null
+  if (!part.live && !part.ebay && !part.shopping) return null
   if (part.live?.price_source === 'bestbuy' && part.live?.live_price_usd != null) {
     return <span className="badge badge-live">live</span>
   }
   if (part.price_source === 'ebay') {
     return <span className="badge badge-ebay">ebay</span>
   }
+  if (part.price_source === 'market') {
+    return <span className="badge badge-market">market</span>
+  }
   return <span className="badge">est.</span>
+}
+
+function MarketLine({ part }) {
+  const m = part.shopping?.market
+  if (!m || m.best_price_usd == null) return null
+  const url = m.buy_url || part.retail_urls?.bestbuy
+  return (
+    <a className="market-line" href={url} target="_blank" rel="noreferrer">
+      cheapest across retailers ${Math.round(m.best_price_usd).toLocaleString()} at{' '}
+      {m.best_merchant}
+      {m.offer_count ? ` (${m.offer_count} offers)` : ''} ↗
+    </a>
+  )
 }
 
 function EbayLine({ part }) {
@@ -340,6 +356,7 @@ function BuildCard({ build }) {
                       <span className="oos">out of stock</span>
                     )}
                     <EbayLine part={part} />
+                    <MarketLine part={part} />
                   </td>
                   <td className="right">
                     {formatUsd(part.effective_price_usd)} {priceBadge(part)}

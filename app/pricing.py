@@ -143,31 +143,45 @@ class BestBuyPricer:
 
     # -- build enrichment --------------------------------------------------
 
-    def enrich_part(self, part: dict, ebay=None) -> dict:
-        """Add live pricing fields, retail links, and optional eBay data to a part."""
+    def enrich_part(self, part: dict, ebay=None, market=None) -> dict:
+        """Add live pricing fields, retail links, and marketplace data to a part.
+
+        Price precedence: Best Buy live -> eBay new median -> market
+        (SearchAPI/Google Shopping) median -> curated baseline.
+        """
         info = self.lookup_part(part)
         part["live"] = info
         part["retail_urls"] = retail.retail_links(part)
         if info["live_price_usd"] is not None:
             part["effective_price_usd"] = info["live_price_usd"]
             part["price_source"] = "bestbuy"
-        elif ebay is not None and ebay.enabled:
-            part["ebay"] = ebay.lookup_part(part)
-            ebay_new = part["ebay"].get("new")
-            if ebay_new and ebay_new.get("median_price_usd") is not None:
-                part["effective_price_usd"] = ebay_new["median_price_usd"]
-                part["price_source"] = "ebay"
-            else:
+        else:
+            part["effective_price_usd"] = None
+            part["price_source"] = None
+            if ebay is not None and ebay.enabled:
+                part["ebay"] = ebay.lookup_part(part)
+                ebay_new = part["ebay"].get("new")
+                if ebay_new and ebay_new.get("median_price_usd") is not None:
+                    part["effective_price_usd"] = ebay_new["median_price_usd"]
+                    part["price_source"] = "ebay"
+            if (part["effective_price_usd"] is None
+                    and market is not None and market.enabled):
+                part["shopping"] = market.lookup_part(part)
+                m = part["shopping"].get("market")
+                if m and m.get("median_price_usd") is not None:
+                    part["effective_price_usd"] = m["median_price_usd"]
+                    part["price_source"] = "market"
+            if part["effective_price_usd"] is None:
                 part["effective_price_usd"] = part["price_usd"]
                 part["price_source"] = "baseline"
-        else:
-            part["effective_price_usd"] = part["price_usd"]
-            part["price_source"] = "baseline"
         if ebay is not None and ebay.enabled and "ebay" not in part:
             part["ebay"] = ebay.lookup_part(part)
+        if market is not None and market.enabled and "shopping" not in part:
+            part["shopping"] = market.lookup_part(part)
         return part
 
-    def enrich_builds(self, result: dict, require_in_stock: bool = False, ebay=None) -> dict:
+    def enrich_builds(self, result: dict, require_in_stock: bool = False, ebay=None,
+                      market=None) -> dict:
         """Enrich every part and prebuilt in the result and recompute totals.
 
         With require_in_stock=True, out-of-stock parts are swapped for the cheapest
@@ -179,7 +193,7 @@ class BestBuyPricer:
         enriched = {}
         for part in all_parts:
             if part["id"] not in enriched:
-                self.enrich_part(part, ebay=ebay)
+                self.enrich_part(part, ebay=ebay, market=market)
                 enriched[part["id"]] = part
 
         for build in result.get("builds", []):
@@ -188,7 +202,8 @@ class BestBuyPricer:
                 if part is None:
                     continue
                 if require_in_stock and part["live"]["in_stock"] is False:
-                    replacement = self._find_in_stock_replacement(build, slot, part, ebay=ebay)
+                    replacement = self._find_in_stock_replacement(build, slot, part,
+                                                                  ebay=ebay, market=market)
                     if replacement is not None:
                         swaps.append(f"{part['name']} -> {replacement['name']}")
                         build["parts"][slot] = replacement
@@ -202,7 +217,8 @@ class BestBuyPricer:
                 pb["retail_urls"] = retail.retail_links(pb)
         return result
 
-    def _find_in_stock_replacement(self, build: dict, slot: str, part: dict, ebay=None) -> dict | None:
+    def _find_in_stock_replacement(self, build: dict, slot: str, part: dict,
+                                   ebay=None, market=None) -> dict | None:
         """Cheapest in-stock equivalent for `part` that keeps `build` compatible."""
         candidates = []
         for cand in parts_db().get(_category_of(slot), []):
@@ -211,7 +227,7 @@ class BestBuyPricer:
             candidates.append(cand)
         candidates.sort(key=lambda c: c["price_usd"])
         for cand in candidates:
-            self.enrich_part(cand, ebay=ebay)
+            self.enrich_part(cand, ebay=ebay, market=market)
             if cand["live"]["in_stock"] is not True:
                 continue
             trial = dict(build["parts"])

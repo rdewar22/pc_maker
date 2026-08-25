@@ -132,6 +132,15 @@ a:hover { text-decoration: underline; }
 }
 .badge-live { color: var(--green); border-color: var(--green); }
 .badge-ebay { color: #e5a13d; border-color: #e5a13d; }
+.badge-market { color: #7ecbff; border-color: #7ecbff; }
+
+.market-line {
+  display: block;
+  font-size: 0.78rem;
+  color: #7ecbff;
+  margin-top: 0.15rem;
+}
+.market-line:hover { text-decoration: underline; }
 
 .ebay-line {
   display: block;

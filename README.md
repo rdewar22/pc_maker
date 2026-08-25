@@ -17,14 +17,18 @@ compatible PC part lists with pricing.
    prebuilt systems (`data/prebuilts.json`) that meet the same target.
 4. **Retailer links** (`app/retail.py`) — every part and prebuilt gets Best Buy and
    Newegg search deep links, which always resolve to live listings (real prices/stock).
-5. **Live pricing** (`app/pricing.py`, `app/ebay.py`) — multi-source:
+5. **Live pricing** (`app/pricing.py`, `app/ebay.py`, `app/searchapi.py`) — multi-source:
    - **Best Buy Products API**: batch SKU lookups (`sku in(...)` — one API call
      prices a whole build), search fallback for parts without SKUs, 1-hour disk
-     cache, automatic fallback to baseline prices
+     cache, automatic fallback to curated baseline prices
    - **eBay Browse API** (`app/ebay.py`): marketplace pricing — median new and
      used/refurb prices from fixed-price listings (outlier-filtered), links to
      the cheapest listings, and per-build "used total" in the UI
-   - Price precedence: Best Buy live → eBay new median → curated baseline
+   - **SearchAPI.io / Google Shopping** (`app/searchapi.py`): multi-retailer
+     aggregation — median price + cheapest offer across Best Buy, Walmart,
+     Newegg, etc. per part, shown as "cheapest across retailers" links.
+     6-hour cache by default to stretch the small free tier
+   - Price precedence: Best Buy live → eBay new median → market median → baseline
    - Stock-aware builds: with `require_in_stock`, out-of-stock parts are swapped
      for the cheapest in-stock equivalent that keeps the build compatible
      (substitutions are reported in `stock_swaps` and shown in the UI)
@@ -66,7 +70,13 @@ export EBAY_CLIENT_ID=yourclientid
 export EBAY_CLIENT_SECRET=yoursecret
 ```
 
-(Or put all three in a `.env` file — copy `.env.example`.)
+SearchAPI.io (free, no card, instant): sign up at searchapi.io and set:
+
+```bash
+export SEARCHAPI_API_KEY=yourkey
+```
+
+(Or put all of them in a `.env` file — copy `.env.example`.)
 
 Parts with a `bestbuy_sku` in `data/parts.json` get exact batch lookups; others fall back
 to a Best Buy name search (`search_term` field), then to baseline prices if the API
@@ -111,6 +121,7 @@ app/
   retail.py    # Best Buy / Newegg search link generation
   pricing.py   # Best Buy client, cache, fallback + multi-source enrichment
   ebay.py      # eBay Browse API client (OAuth, new/used marketplace pricing)
+  searchapi.py # SearchAPI.io Google Shopping multi-retailer aggregation
   main.py      # FastAPI app
   cli.py       # command-line interface
 data/
