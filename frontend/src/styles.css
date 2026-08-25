@@ -131,6 +131,22 @@ a:hover { text-decoration: underline; }
   vertical-align: middle;
 }
 .badge-live { color: var(--green); border-color: var(--green); }
+.badge-ebay { color: #e5a13d; border-color: #e5a13d; }
+
+.ebay-line {
+  display: block;
+  font-size: 0.78rem;
+  color: #e5a13d;
+  margin-top: 0.15rem;
+}
+.ebay-line:hover { text-decoration: underline; }
+
+.used-total {
+  color: #e5a13d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 .newegg-link {
   font-size: 0.75rem;

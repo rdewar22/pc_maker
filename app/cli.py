@@ -12,6 +12,7 @@ import sys
 
 from app import builder
 from app.data import games_db, parts_db
+from app.ebay import EbayPricer
 from app.pricing import BestBuyPricer
 
 SLOT_LABELS = {
@@ -44,6 +45,7 @@ def cmd_parts(args):
 
 def cmd_build(args):
     pricer = BestBuyPricer()
+    ebay = EbayPricer()
     try:
         result = builder.generate_builds(
             game_id=args.game,
@@ -59,7 +61,7 @@ def cmd_build(args):
         print(f"Cannot build: {e}", file=sys.stderr)
         return 1
 
-    pricer.enrich_builds(result, require_in_stock=args.in_stock_only)
+    pricer.enrich_builds(result, require_in_stock=args.in_stock_only, ebay=ebay)
 
     game = result["game"]
     print(
@@ -86,7 +88,15 @@ def cmd_build(args):
             stock_note = ""
             if stock.get("price_source") == "bestbuy":
                 stock_note = " (in stock)" if stock["in_stock"] else " (OUT OF STOCK)"
-            print(f"  {SLOT_LABELS[slot]:14} {part['name']:48} ${price:7.0f}{stock_note}")
+            source = part.get("price_source", "baseline")
+            src_note = {"bestbuy": "", "ebay": " (ebay)", "baseline": " (est.)"}[source]
+            print(f"  {SLOT_LABELS[slot]:14} {part['name']:48} ${price:7.0f}{src_note}{stock_note}")
+            used = part.get("ebay", {}).get("used")
+            if used and used.get("median_price_usd"):
+                print(
+                    f"  {'':14}   └ used on eBay ~${used['median_price_usd']:,.0f}"
+                    f"  ({used['listing_count']} listings)"
+                )
         print(f"  {'TOTAL':14} {'':48} ${build['total_price_usd']:7,.0f}")
     if result.get("prebuilts"):
         print("\nPREBUILT ALTERNATIVES")
@@ -100,6 +110,8 @@ def cmd_build(args):
         print(f"\nNote: {note}")
     if not pricer.enabled:
         print("\n(Using baseline prices. Set BESTBUY_API_KEY for live pricing/stock.)")
+    if not ebay.enabled:
+        print("(eBay marketplace pricing disabled. Set EBAY_CLIENT_ID/EBAY_CLIENT_SECRET.)")
     return 0
 
 

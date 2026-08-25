@@ -17,10 +17,14 @@ compatible PC part lists with pricing.
    prebuilt systems (`data/prebuilts.json`) that meet the same target.
 4. **Retailer links** (`app/retail.py`) — every part and prebuilt gets Best Buy and
    Newegg search deep links, which always resolve to live listings (real prices/stock).
-5. **Live pricing** (`app/pricing.py`) — Best Buy Products API integration with:
-   - Batch SKU lookups (`sku in(...)` — one API call prices a whole build)
-   - Search-based lookups for parts without SKUs
-   - 1-hour disk cache, automatic fallback to curated baseline prices
+5. **Live pricing** (`app/pricing.py`, `app/ebay.py`) — multi-source:
+   - **Best Buy Products API**: batch SKU lookups (`sku in(...)` — one API call
+     prices a whole build), search fallback for parts without SKUs, 1-hour disk
+     cache, automatic fallback to baseline prices
+   - **eBay Browse API** (`app/ebay.py`): marketplace pricing — median new and
+     used/refurb prices from fixed-price listings (outlier-filtered), links to
+     the cheapest listings, and per-build "used total" in the UI
+   - Price precedence: Best Buy live → eBay new median → curated baseline
    - Stock-aware builds: with `require_in_stock`, out-of-stock parts are swapped
      for the cheapest in-stock equivalent that keeps the build compatible
      (substitutions are reported in `stock_swaps` and shown in the UI)
@@ -55,10 +59,21 @@ Get a free API key at https://developer.bestbuy.com and:
 export BESTBUY_API_KEY=yourkey
 ```
 
+eBay (also free, instant): create an app at developer.ebay.com and set:
+
+```bash
+export EBAY_CLIENT_ID=yourclientid
+export EBAY_CLIENT_SECRET=yoursecret
+```
+
+(Or put all three in a `.env` file — copy `.env.example`.)
+
 Parts with a `bestbuy_sku` in `data/parts.json` get exact batch lookups; others fall back
 to a Best Buy name search (`search_term` field), then to baseline prices if the API
-is unreachable. Stock status, add-to-cart links, live prices, and the "in-stock only"
-option all activate automatically. Without a key, everything still works using
+is unreachable. eBay new/used medians appear automatically when configured —
+and if Best Buy has no data for a part, its eBay new-median price becomes the
+live price. Stock status, add-to-cart links, live prices, and the "in-stock only"
+option all activate automatically. Without any keys, everything still works using
 baseline prices and search links.
 
 CLI:
@@ -94,7 +109,8 @@ app/
   compat.py    # part compatibility rules
   builder.py   # build generation (Value/Balanced/Headroom) + prebuilt matching
   retail.py    # Best Buy / Newegg search link generation
-  pricing.py   # Best Buy client, cache, fallback logic
+  pricing.py   # Best Buy client, cache, fallback + multi-source enrichment
+  ebay.py      # eBay Browse API client (OAuth, new/used marketplace pricing)
   main.py      # FastAPI app
   cli.py       # command-line interface
 data/

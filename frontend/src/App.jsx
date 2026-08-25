@@ -250,17 +250,44 @@ function partLink(part) {
 }
 
 function priceBadge(part) {
-  if (!part.live) return null
-  if (part.live.price_source === 'bestbuy' && part.live.live_price_usd != null) {
+  if (!part.live && !part.ebay) return null
+  if (part.live?.price_source === 'bestbuy' && part.live?.live_price_usd != null) {
     return <span className="badge badge-live">live</span>
   }
+  if (part.price_source === 'ebay') {
+    return <span className="badge badge-ebay">ebay</span>
+  }
   return <span className="badge">est.</span>
+}
+
+function EbayLine({ part }) {
+  const used = part.ebay?.used
+  if (!used || used.median_price_usd == null) return null
+  const url = used.buy_url || part.ebay?.buy_url
+  return (
+    <a
+      className="ebay-line"
+      href={url || `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(part.name)}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      used on eBay ~${Math.round(used.median_price_usd).toLocaleString()}
+      {used.listing_count ? ` (${used.listing_count} listings)` : ''} ↗
+    </a>
+  )
 }
 
 function BuildCard({ build }) {
   const [open, setOpen] = useState(build.variant === 'value')
   const info = VARIANT_INFO[build.variant] ?? { label: build.variant, desc: '' }
   const parts = Object.entries(build.parts).filter(([, p]) => p)
+  const usedPrices = parts
+    .map(([, p]) => p.ebay?.used?.median_price_usd)
+    .filter((v) => v != null)
+  const usedTotal =
+    usedPrices.length >= 3
+      ? usedPrices.reduce((a, b) => a + b, 0)
+      : null
 
   return (
     <article className={`card card-${build.variant}`}>
@@ -272,6 +299,11 @@ function BuildCard({ build }) {
         <div className="card-stats">
           <span className="fps">~{build.estimated_fps} FPS</span>
           <span className="price">{formatUsd(build.total_price_usd)}</span>
+          {usedTotal && (
+            <span className="used-total">
+              used ~{formatUsd(usedTotal)}
+            </span>
+          )}
           <span className="chevron">{open ? '▾' : '▸'}</span>
         </div>
       </header>
@@ -307,6 +339,7 @@ function BuildCard({ build }) {
                     {part.live?.in_stock === false && (
                       <span className="oos">out of stock</span>
                     )}
+                    <EbayLine part={part} />
                   </td>
                   <td className="right">
                     {formatUsd(part.effective_price_usd)} {priceBadge(part)}
