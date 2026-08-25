@@ -16,10 +16,13 @@ import time
 from pathlib import Path
 
 import httpx
+from dotenv import load_dotenv
 
 from app import compat
 from app import retail
 from app.data import parts_db
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 API_BASE = "https://api.bestbuy.com/v1/products"
 CACHE_TTL_SECONDS = 3600
