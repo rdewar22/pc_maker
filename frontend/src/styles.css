@@ -119,6 +119,48 @@ a:hover { text-decoration: underline; }
 
 .compat-errors { color: var(--red); font-size: 0.85rem; padding: 0.5rem 1.25rem 1rem; margin: 0; }
 
+.badge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+.badge-live { color: var(--green); border-color: var(--green); }
+
+.newegg-link {
+  font-size: 0.75rem;
+  margin-left: 0.6rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+}
+.newegg-link:hover { color: var(--text); text-decoration: none; border-color: var(--muted); }
+
+.in-stock { color: var(--green); font-size: 0.75rem; margin-left: 0.5rem; }
+
+.stock-toggle {
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
+}
+.stock-toggle.on { border-color: var(--green); color: var(--green); background: rgba(63, 214, 143, 0.08); }
+
+.swaps { font-size: 0.85rem; color: var(--muted); padding: 0.5rem 1.25rem; }
+.swaps p { margin: 0 0 0.25rem; }
+.swaps ul { margin: 0; padding-left: 1.2rem; }
+.swaps li { margin: 0.15rem 0; }
+
 .muted { color: var(--muted); font-weight: 400; font-size: 0.9rem; }
 
 .prebuilts { margin-top: 2rem; }

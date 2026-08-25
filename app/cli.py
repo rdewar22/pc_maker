@@ -59,7 +59,7 @@ def cmd_build(args):
         print(f"Cannot build: {e}", file=sys.stderr)
         return 1
 
-    pricer.enrich_builds(result)
+    pricer.enrich_builds(result, require_in_stock=args.in_stock_only)
 
     game = result["game"]
     print(
@@ -74,6 +74,9 @@ def cmd_build(args):
         )
         if build.get("compatibility_errors"):
             print(f"  !! compatibility: {build['compatibility_errors']}")
+        if build.get("stock_swaps"):
+            for swap in build["stock_swaps"]:
+                print(f"  [swapped for stock] {swap}")
         for slot in SLOT_LABELS:
             part = build["parts"].get(slot)
             if part is None:
@@ -115,6 +118,8 @@ def main(argv=None):
     p_build.add_argument("--settings", default="high", choices=["low", "medium", "high", "ultra"])
     p_build.add_argument("--fps", type=int, default=60)
     p_build.add_argument("--budget", type=float, default=None)
+    p_build.add_argument("--in-stock-only", action="store_true", dest="in_stock_only",
+                         help="Swap out-of-stock parts for in-stock equivalents (requires BESTBUY_API_KEY)")
 
     args = parser.parse_args(argv)
     return {"games": cmd_games, "parts": cmd_parts, "build": cmd_build}[args.command](args)

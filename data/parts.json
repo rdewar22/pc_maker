@@ -6,7 +6,7 @@
   "gpus": [
     {"id": "rx-6500-xt", "name": "AMD Radeon RX 6500 XT 4GB", "brand": "AMD", "tier": 1, "vram_gb": 4, "tdp_w": 107, "length_mm": 200, "price_usd": 170, "bestbuy_sku": null, "search_term": "Radeon RX 6500 XT"},
     {"id": "rx-6600", "name": "AMD Radeon RX 6600 8GB", "brand": "AMD", "tier": 2, "vram_gb": 8, "tdp_w": 132, "length_mm": 240, "price_usd": 210, "bestbuy_sku": null, "search_term": "Radeon RX 6600"},
-    {"id": "rtx-4060", "name": "NVIDIA GeForce RTX 4060 8GB", "brand": "NVIDIA", "tier": 3, "vram_gb": 8, "tdp_w": 115, "length_mm": 240, "price_usd": 300, "bestbuy_sku": null, "search_term": "GeForce RTX 4060"},
+    {"id": "rtx-4060", "name": "MSI GeForce RTX 4060 Ventus 2X 8GB", "brand": "NVIDIA", "tier": 3, "vram_gb": 8, "tdp_w": 115, "length_mm": 240, "price_usd": 300, "bestbuy_sku": 6548653, "search_term": "GeForce RTX 4060"},
     {"id": "rx-7700-xt", "name": "AMD Radeon RX 7700 XT 12GB", "brand": "AMD", "tier": 4, "vram_gb": 12, "tdp_w": 245, "length_mm": 287, "price_usd": 420, "bestbuy_sku": null, "search_term": "Radeon RX 7700 XT"},
     {"id": "rtx-5070", "name": "NVIDIA GeForce RTX 5070 12GB", "brand": "NVIDIA", "tier": 5, "vram_gb": 12, "tdp_w": 250, "length_mm": 267, "price_usd": 550, "bestbuy_sku": null, "search_term": "GeForce RTX 5070"},
     {"id": "rx-7900-xt", "name": "AMD Radeon RX 7900 XT 20GB", "brand": "AMD", "tier": 6, "vram_gb": 20, "tdp_w": 315, "length_mm": 320, "price_usd": 750, "bestbuy_sku": null, "search_term": "Radeon RX 7900 XT"},

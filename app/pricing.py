@@ -3,6 +3,11 @@
 Uses the Best Buy Products API (https://developer.bestbuy.com).
 Set the BESTBUY_API_KEY environment variable to enable live pricing.
 Without a key, builds silently fall back to curated baseline prices.
+
+Deep integration features:
+- Batch SKU lookups via the `sku in(...)` filter (one API call for a whole build)
+- Stock-aware part substitution: when require_in_stock, out-of-stock parts are
+  swapped for the cheapest in-stock equivalent that keeps the build compatible
 """
 
 import json
@@ -12,12 +17,15 @@ from pathlib import Path
 
 import httpx
 
+from app import compat
 from app import retail
+from app.data import parts_db
 
 API_BASE = "https://api.bestbuy.com/v1/products"
 CACHE_TTL_SECONDS = 3600
 CACHE_PATH = Path(__file__).resolve().parent.parent / ".cache" / "bestbuy.json"
 REQUEST_TIMEOUT = 4.0
+SHOW_FIELDS = "sku,name,salePrice,onlineAvailability,addToCartUrl,condition"
 
 
 class BestBuyPricer:
@@ -58,26 +66,47 @@ class BestBuyPricer:
 
     # -- best buy api ----------------------------------------------------
 
-    def _fetch(self, query: str) -> dict | None:
-        """Query the Products API. `query` is the filter expression, e.g. (sku=6425753)."""
+    def _fetch(self, query: str, page_size: int = 8) -> list:
+        """Query the Products API. `query` is the filter expression, e.g. (sku=6425753).
+        Returns the raw product list (may be empty)."""
         if not self.enabled:
-            return None
+            return []
         url = f"{API_BASE}({query})"
         params = {
             "apiKey": self.api_key,
             "format": "json",
-            "show": "sku,name,salePrice,onlineAvailability,addToCartUrl,condition",
-            "pageSize": 8,
+            "show": SHOW_FIELDS,
+            "pageSize": page_size,
             "sort": "salePrice.asc",
         }
         try:
             resp = httpx.get(url, params=params, timeout=REQUEST_TIMEOUT)
             resp.raise_for_status()
-            products = resp.json().get("products", [])
+            return resp.json().get("products", [])
         except (httpx.HTTPError, json.JSONDecodeError):
-            return None
+            return []
+
+    @staticmethod
+    def _newest(products: list) -> dict | None:
         new_ = [p for p in products if p.get("condition") == "New"]
         return new_[0] if new_ else (products[0] if products else None)
+
+    def _result_from_product(self, data: dict | None) -> dict:
+        if data is None:
+            return {
+                "live_price_usd": None,
+                "in_stock": None,
+                "buy_url": None,
+                "price_source": "baseline",
+            }
+        return {
+            "live_price_usd": data.get("salePrice"),
+            "in_stock": bool(data.get("onlineAvailability")),
+            "buy_url": data.get("addToCartUrl"),
+            "bestbuy_sku": data.get("sku"),
+            "matched_name": data.get("name"),
+            "price_source": "bestbuy",
+        }
 
     def lookup_part(self, part: dict) -> dict:
         """Return live pricing info for a part, or a fallback marker."""
@@ -89,28 +118,25 @@ class BestBuyPricer:
 
         data = None
         if sku:
-            data = self._fetch(f"sku={sku}")
+            data = self._newest(self._fetch(f"sku={sku}"))
         if data is None and part.get("search_term"):
-            data = self._fetch(f"search={part['search_term']}")
+            data = self._newest(self._fetch(f"search={part['search_term']}"))
 
-        if data is None:
-            result = {
-                "live_price_usd": None,
-                "in_stock": None,
-                "buy_url": None,
-                "price_source": "baseline",
-            }
-        else:
-            result = {
-                "live_price_usd": data.get("salePrice"),
-                "in_stock": bool(data.get("onlineAvailability")),
-                "buy_url": data.get("addToCartUrl"),
-                "bestbuy_sku": data.get("sku"),
-                "matched_name": data.get("name"),
-                "price_source": "bestbuy",
-            }
+        result = self._result_from_product(data)
         self._store(cache_key, result)
         return result
+
+    def warm_skus(self, parts: list) -> None:
+        """Batch-lookup pricing for all parts with SKUs in one API call."""
+        skus = {p["bestbuy_sku"] for p in parts if p.get("bestbuy_sku")}
+        skus = {s for s in skus if self._cached(f"sku:{s}") is None}
+        if not skus:
+            return
+        products = self._fetch("sku in(" + ",".join(str(s) for s in sorted(skus)) + ")",
+                               page_size=100)
+        by_sku = {p.get("sku"): p for p in products}
+        for sku in skus:
+            self._store(f"sku:{sku}", self._result_from_product(by_sku.get(sku)))
 
     # -- build enrichment --------------------------------------------------
 
@@ -125,22 +151,101 @@ class BestBuyPricer:
             part["effective_price_usd"] = part["price_usd"]
         return part
 
-    def enrich_builds(self, result: dict) -> dict:
-        """Enrich every part and prebuilt in the result and recompute totals. Mutates `result`."""
-        seen = {}
+    def enrich_builds(self, result: dict, require_in_stock: bool = False) -> dict:
+        """Enrich every part and prebuilt in the result and recompute totals.
+
+        With require_in_stock=True, out-of-stock parts are swapped for the cheapest
+        in-stock equivalent that keeps the build fully compatible. Parts that can't
+        be swapped stay in place, flagged out-of-stock.
+        """
+        all_parts = [p for b in result.get("builds", []) for p in b["parts"].values() if p]
+        self.warm_skus(all_parts)
+        enriched = {}
+        for part in all_parts:
+            if part["id"] not in enriched:
+                self.enrich_part(part)
+                enriched[part["id"]] = part
+
         for build in result.get("builds", []):
-            for slot, part in build["parts"].items():
+            swaps = []
+            for slot, part in list(build["parts"].items()):
                 if part is None:
                     continue
-                if part["id"] in seen:
-                    build["parts"][slot] = seen[part["id"]]
-                    continue
-                self.enrich_part(part)
-                seen[part["id"]] = part
+                if require_in_stock and part["live"]["in_stock"] is False:
+                    replacement = self._find_in_stock_replacement(build, slot, part)
+                    if replacement is not None:
+                        swaps.append(f"{part['name']} -> {replacement['name']}")
+                        build["parts"][slot] = replacement
+            build["stock_swaps"] = swaps
             build["total_price_usd"] = sum(
                 p["effective_price_usd"] for p in build["parts"].values() if p
             )
+
         for pb in result.get("prebuilts", []):
             if "retail_urls" not in pb:
                 pb["retail_urls"] = retail.retail_links(pb)
         return result
+
+    def _find_in_stock_replacement(self, build: dict, slot: str, part: dict) -> dict | None:
+        """Cheapest in-stock equivalent for `part` that keeps `build` compatible."""
+        candidates = []
+        for cand in parts_db().get(_category_of(slot), []):
+            if cand["id"] == part["id"] or not _is_equivalent(cand, part):
+                continue
+            candidates.append(cand)
+        candidates.sort(key=lambda c: c["price_usd"])
+        for cand in candidates:
+            self.enrich_part(cand)
+            if cand["live"]["in_stock"] is not True:
+                continue
+            trial = dict(build["parts"])
+            trial[slot] = cand
+            if compat.is_compatible(trial):
+                return cand
+        return None
+
+
+_SLOT_TO_CATEGORY = {
+    "gpu": "gpus",
+    "cpu": "cpus",
+    "motherboard": "motherboards",
+    "ram": "ram",
+    "storage": "storage",
+    "psu": "psus",
+    "case": "cases",
+    "cooler": "coolers",
+}
+
+
+def _category_of(slot: str) -> str:
+    return _SLOT_TO_CATEGORY[slot]
+
+
+def _is_equivalent(cand: dict, part: dict) -> bool:
+    """True when `cand` can fill the same role as `part` (same tier/class, >= specs)."""
+    if "tier" in part and "vram_gb" in part:  # gpu
+        return cand.get("tier") == part["tier"] and cand.get("vram_gb", 0) >= part["vram_gb"]
+    if "tier" in part:  # cpu
+        return cand.get("tier") == part["tier"]
+    if "socket" in part and "ddr" in part:  # motherboard
+        return cand["socket"] == part["socket"] and cand["ddr"] == part["ddr"]
+    if "sockets" in part:  # cooler
+        return (
+            set(part["sockets"]) <= set(cand.get("sockets", []))
+            and cand.get("tdp_capacity_w", 0) >= part["tdp_capacity_w"]
+        )
+    if "socket" in part:  # cpu
+        return cand["socket"] == part["socket"]
+    if "capacity_gb" in part and "ddr" in part:  # ram
+        return cand["ddr"] == part["ddr"] and cand["capacity_gb"] >= part["capacity_gb"]
+    if "capacity_gb" in part:  # storage
+        return cand["capacity_gb"] >= part["capacity_gb"]
+    if "wattage" in part:  # psu
+        return cand["wattage"] >= part["wattage"]
+    if "max_gpu_len_mm" in part:  # case
+        return (
+            cand["max_gpu_len_mm"] >= part["max_gpu_len_mm"]
+            and cand["max_cooler_height_mm"] >= part["max_cooler_height_mm"]
+            and set(part["supports_form_factors"]) <= set(cand["supports_form_factors"])
+        )
+    return cand["id"] == part["id"]

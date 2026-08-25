@@ -49,6 +49,7 @@ export default function App() {
   const [settings, setSettings] = useState('high')
   const [targetFps, setTargetFps] = useState(60)
   const [budget, setBudget] = useState('')
+  const [inStockOnly, setInStockOnly] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -71,6 +72,7 @@ export default function App() {
       const body = { game_id: gameId, resolution, settings, target_fps: targetFps }
       const b = parseFloat(budget)
       if (!Number.isNaN(b) && b > 0) body.budget_usd = b
+      if (inStockOnly) body.require_in_stock = true
       setResult(await api('/api/builds', { method: 'POST', body: JSON.stringify(body) }))
     } catch (e) {
       setError(e.message)
@@ -161,6 +163,17 @@ export default function App() {
           />
         </label>
 
+        <label className="field field-stock">
+          <span>Availability</span>
+          <button
+            type="button"
+            className={`stock-toggle ${inStockOnly ? 'on' : ''}`}
+            onClick={() => setInStockOnly(!inStockOnly)}
+          >
+            {inStockOnly ? '✓ In-stock parts only' : 'In-stock parts only'}
+          </button>
+        </label>
+
         <button className="go" type="submit" disabled={loading || !gameId}>
           {loading ? 'Building…' : 'Find my build'}
         </button>
@@ -236,6 +249,14 @@ function partLink(part) {
   return part.retail_urls?.bestbuy || null
 }
 
+function priceBadge(part) {
+  if (!part.live) return null
+  if (part.live.price_source === 'bestbuy' && part.live.live_price_usd != null) {
+    return <span className="badge badge-live">live</span>
+  }
+  return <span className="badge">est.</span>
+}
+
 function BuildCard({ build }) {
   const [open, setOpen] = useState(build.variant === 'value')
   const info = VARIANT_INFO[build.variant] ?? { label: build.variant, desc: '' }
@@ -270,11 +291,26 @@ function BuildCard({ build }) {
                     ) : (
                       part.name
                     )}
+                    {part.retail_urls?.newegg && (
+                      <a
+                        className="newegg-link"
+                        href={part.retail_urls.newegg}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Newegg
+                      </a>
+                    )}
+                    {part.live?.in_stock === true && (
+                      <span className="in-stock">in stock</span>
+                    )}
                     {part.live?.in_stock === false && (
                       <span className="oos">out of stock</span>
                     )}
                   </td>
-                  <td className="right">{formatUsd(part.effective_price_usd)}</td>
+                  <td className="right">
+                    {formatUsd(part.effective_price_usd)} {priceBadge(part)}
+                  </td>
                 </tr>
               )
             })}
@@ -286,6 +322,16 @@ function BuildCard({ build }) {
             </tr>
           </tbody>
         </table>
+      )}
+      {build.stock_swaps?.length > 0 && (
+        <div className="swaps">
+          <p>Substituted for availability:</p>
+          <ul>
+            {build.stock_swaps.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
       )}
       {build.compatibility_errors?.length > 0 && (
         <ul className="compat-errors">

@@ -31,6 +31,7 @@ class BuildRequest(BaseModel):
     settings: str = Field(default="high", pattern="^(low|medium|high|ultra)$")
     target_fps: int = Field(default=60, ge=30, le=480)
     budget_usd: float | None = Field(default=None, gt=0)
+    require_in_stock: bool = False
 
 
 @app.get("/api/games")
@@ -68,6 +69,7 @@ def create_builds(req: BuildRequest):
         req.settings,
         req.target_fps,
         req.budget_usd,
+        req.require_in_stock,
         pricer.enabled,
     )
     cached = _build_cache.get(key)
@@ -87,7 +89,7 @@ def create_builds(req: BuildRequest):
     except builder.BuildImpossibleError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    pricer.enrich_builds(result)
+    pricer.enrich_builds(result, require_in_stock=req.require_in_stock)
     result["live_pricing"] = pricer.enabled
     _build_cache[key] = (result, time.time())
     return result

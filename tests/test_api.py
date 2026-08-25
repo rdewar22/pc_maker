@@ -51,6 +51,15 @@ class TestApi:
         r = client.post("/api/builds", json={"game_id": "valorant", "resolution": "720p"})
         assert r.status_code == 422
 
+    def test_require_in_stock_accepted(self, client):
+        r = client.post(
+            "/api/builds",
+            json={"game_id": "valorant", "target_fps": 144, "require_in_stock": True},
+        )
+        assert r.status_code == 200
+        for build in r.json()["builds"]:
+            assert build.get("stock_swaps") == []
+
     def test_parts_endpoint(self, client):
         r = client.get("/api/parts", params={"category": "gpus"})
         assert r.status_code == 200

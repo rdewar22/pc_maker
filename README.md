@@ -17,9 +17,13 @@ compatible PC part lists with pricing.
    prebuilt systems (`data/prebuilts.json`) that meet the same target.
 4. **Retailer links** (`app/retail.py`) — every part and prebuilt gets Best Buy and
    Newegg search deep links, which always resolve to live listings (real prices/stock).
-5. **Live pricing** (`app/pricing.py`) — optional Best Buy Products API integration
-   (price, stock, add-to-cart links) with a 1-hour disk cache and automatic fallback
-   to curated baseline prices.
+5. **Live pricing** (`app/pricing.py`) — Best Buy Products API integration with:
+   - Batch SKU lookups (`sku in(...)` — one API call prices a whole build)
+   - Search-based lookups for parts without SKUs
+   - 1-hour disk cache, automatic fallback to curated baseline prices
+   - Stock-aware builds: with `require_in_stock`, out-of-stock parts are swapped
+     for the cheapest in-stock equivalent that keeps the build compatible
+     (substitutions are reported in `stock_swaps` and shown in the UI)
 
 ## Quick start (CLI)
 
@@ -51,9 +55,17 @@ Get a free API key at https://developer.bestbuy.com and:
 export BESTBUY_API_KEY=yourkey
 ```
 
-Parts with a `bestbuy_sku` in `data/parts.json` get exact lookups; others fall back
+Parts with a `bestbuy_sku` in `data/parts.json` get exact batch lookups; others fall back
 to a Best Buy name search (`search_term` field), then to baseline prices if the API
-is unreachable. Stock status and "Buy at Best Buy" links appear in the UI.
+is unreachable. Stock status, add-to-cart links, live prices, and the "in-stock only"
+option all activate automatically. Without a key, everything still works using
+baseline prices and search links.
+
+CLI:
+
+```bash
+.venv/bin/python -m app.cli build cyberpunk-2077 --fps 60 --in-stock-only
+```
 
 ## Tests
 
