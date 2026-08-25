@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "note": "gpu_load / cpu_load are relative to a reference demanding game (1.0 = Cyberpunk-level GPU load). vram_gb is the recommended GPU VRAM per resolution. fps_cap for games with engine-locked framerates.",
+    "settings": ["low", "medium", "high", "ultra"],
+    "resolutions": ["1080p", "1440p", "4k"],
+    "target_fps_options": [60, 120, 144, 165, 240]
+  },
+  "games": [
+    {"id": "hunt-showdown-1896", "name": "Hunt: Showdown 1896", "genre": "FPS Extraction Shooter", "gpu_load": 0.55, "cpu_load": 1.3, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 10}, "notes": "CryEngine; very CPU-bound at high refresh rates"},
+    {"id": "cyberpunk-2077", "name": "Cyberpunk 2077", "genre": "RPG", "gpu_load": 1.0, "cpu_load": 0.8, "vram_gb": {"1080p": 8, "1440p": 12, "4k": 16}, "notes": "Reference title for the performance model"},
+    {"id": "valorant", "name": "Valorant", "genre": "Competitive FPS", "gpu_load": 0.1, "cpu_load": 0.5, "vram_gb": {"1080p": 4, "1440p": 6, "4k": 8}, "notes": "Runs on nearly anything; high refresh is CPU-driven"},
+    {"id": "fortnite", "name": "Fortnite", "genre": "Battle Royale", "gpu_load": 0.35, "cpu_load": 0.7, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 10}, "notes": "Competitive settings scale way down"},
+    {"id": "cs2", "name": "Counter-Strike 2", "genre": "Competitive FPS", "gpu_load": 0.3, "cpu_load": 1.0, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 10}, "notes": "CPU-bound past ~200 FPS"},
+    {"id": "apex-legends", "name": "Apex Legends", "genre": "Battle Royale FPS", "gpu_load": 0.4, "cpu_load": 0.8, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 10}, "notes": "Engine caps at 300 FPS"},
+    {"id": "warzone", "name": "Call of Duty: Warzone", "genre": "Battle Royale FPS", "gpu_load": 0.75, "cpu_load": 1.1, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 12}, "notes": "Demands both CPU and GPU"},
+    {"id": "baldurs-gate-3", "name": "Baldur's Gate 3", "genre": "RPG", "gpu_load": 0.6, "cpu_load": 0.9, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 12}, "notes": "Act 3 city is CPU-heavy"},
+    {"id": "elden-ring", "name": "Elden Ring", "genre": "Action RPG", "gpu_load": 0.6, "cpu_load": 0.6, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 12}, "fps_cap": 60, "notes": "Engine-locked to 60 FPS"},
+    {"id": "red-dead-redemption-2", "name": "Red Dead Redemption 2", "genre": "Action Adventure", "gpu_load": 0.9, "cpu_load": 0.7, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 12}, "notes": ""},
+    {"id": "starfield", "name": "Starfield", "genre": "RPG", "gpu_load": 0.85, "cpu_load": 1.0, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 16}, "notes": ""},
+    {"id": "alan-wake-2", "name": "Alan Wake 2", "genre": "Survival Horror", "gpu_load": 1.2, "cpu_load": 0.8, "vram_gb": {"1080p": 10, "1440p": 12, "4k": 16}, "notes": "Path tracing not included in estimates"},
+    {"id": "black-myth-wukong", "name": "Black Myth: Wukong", "genre": "Action RPG", "gpu_load": 1.15, "cpu_load": 0.8, "vram_gb": {"1080p": 8, "1440p": 12, "4k": 16}, "notes": ""},
+    {"id": "monster-hunter-wilds", "name": "Monster Hunter Wilds", "genre": "Action RPG", "gpu_load": 1.1, "cpu_load": 1.0, "vram_gb": {"1080p": 10, "1440p": 12, "4k": 16}, "notes": ""},
+    {"id": "hogwarts-legacy", "name": "Hogwarts Legacy", "genre": "RPG", "gpu_load": 0.9, "cpu_load": 0.9, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 12}, "notes": ""},
+    {"id": "helldivers-2", "name": "Helldivers 2", "genre": "Co-op Shooter", "gpu_load": 0.7, "cpu_load": 0.9, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 12}, "notes": ""},
+    {"id": "escape-from-tarkov", "name": "Escape from Tarkov", "genre": "Extraction Shooter", "gpu_load": 0.6, "cpu_load": 1.4, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 10}, "notes": "Notoriously CPU and RAM hungry; poorly optimized"},
+    {"id": "star-citizen", "name": "Star Citizen", "genre": "Space Sim", "gpu_load": 0.8, "cpu_load": 1.4, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 16}, "notes": "Also wants 32GB+ RAM; unstable framerates"},
+    {"id": "msfs-2024", "name": "Microsoft Flight Simulator 2024", "genre": "Flight Sim", "gpu_load": 0.9, "cpu_load": 1.5, "vram_gb": {"1080p": 10, "1440p": 12, "4k": 16}, "notes": "Most CPU/main-thread-bound mainstream game"},
+    {"id": "overwatch-2", "name": "Overwatch 2", "genre": "Competitive FPS", "gpu_load": 0.25, "cpu_load": 0.8, "vram_gb": {"1080p": 6, "1440p": 6, "4k": 8}, "notes": "Very scalable"},
+    {"id": "rainbow-six-siege", "name": "Rainbow Six Siege", "genre": "Competitive FPS", "gpu_load": 0.25, "cpu_load": 0.8, "vram_gb": {"1080p": 4, "1440p": 6, "4k": 8}, "notes": ""},
+    {"id": "rocket-league", "name": "Rocket League", "genre": "Sports", "gpu_load": 0.15, "cpu_load": 0.5, "vram_gb": {"1080p": 4, "1440p": 4, "4k": 6}, "notes": ""},
+    {"id": "minecraft", "name": "Minecraft (Java, shaders off)", "genre": "Sandbox", "gpu_load": 0.08, "cpu_load": 0.5, "vram_gb": {"1080p": 4, "1440p": 4, "4k": 6}, "notes": "Ray-traced shaders would need a big GPU"},
+    {"id": "sims-4", "name": "The Sims 4", "genre": "Life Sim", "gpu_load": 0.1, "cpu_load": 0.4, "vram_gb": {"1080p": 4, "1440p": 4, "4k": 6}, "notes": ""},
+    {"id": "gta-v", "name": "Grand Theft Auto V", "genre": "Action Adventure", "gpu_load": 0.3, "cpu_load": 0.7, "vram_gb": {"1080p": 4, "1440p": 6, "4k": 8}, "notes": ""},
+    {"id": "palworld", "name": "Palworld", "genre": "Survival", "gpu_load": 0.5, "cpu_load": 0.9, "vram_gb": {"1080p": 8, "1440p": 10, "4k": 12}, "notes": ""},
+    {"id": "god-of-war-ragnarok", "name": "God of War Ragnarok", "genre": "Action Adventure", "gpu_load": 0.75, "cpu_load": 0.6, "vram_gb": {"1080p": 6, "1440p": 8, "4k": 12}, "notes": ""}
+  ]
+}

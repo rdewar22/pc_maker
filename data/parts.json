@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "note": "Curated parts database. price_usd is a baseline/fallback price. bestbuy_sku can be filled in to enable live pricing; when null, the Best Buy client falls back to a name search or the baseline price.",
+    "updated": "2026-08-24"
+  },
+  "gpus": [
+    {"id": "rx-6500-xt", "name": "AMD Radeon RX 6500 XT 4GB", "brand": "AMD", "tier": 1, "vram_gb": 4, "tdp_w": 107, "length_mm": 200, "price_usd": 170, "bestbuy_sku": null, "search_term": "Radeon RX 6500 XT"},
+    {"id": "rx-6600", "name": "AMD Radeon RX 6600 8GB", "brand": "AMD", "tier": 2, "vram_gb": 8, "tdp_w": 132, "length_mm": 240, "price_usd": 210, "bestbuy_sku": null, "search_term": "Radeon RX 6600"},
+    {"id": "rtx-4060", "name": "NVIDIA GeForce RTX 4060 8GB", "brand": "NVIDIA", "tier": 3, "vram_gb": 8, "tdp_w": 115, "length_mm": 240, "price_usd": 300, "bestbuy_sku": null, "search_term": "GeForce RTX 4060"},
+    {"id": "rx-7700-xt", "name": "AMD Radeon RX 7700 XT 12GB", "brand": "AMD", "tier": 4, "vram_gb": 12, "tdp_w": 245, "length_mm": 287, "price_usd": 420, "bestbuy_sku": null, "search_term": "Radeon RX 7700 XT"},
+    {"id": "rtx-5070", "name": "NVIDIA GeForce RTX 5070 12GB", "brand": "NVIDIA", "tier": 5, "vram_gb": 12, "tdp_w": 250, "length_mm": 267, "price_usd": 550, "bestbuy_sku": null, "search_term": "GeForce RTX 5070"},
+    {"id": "rx-7900-xt", "name": "AMD Radeon RX 7900 XT 20GB", "brand": "AMD", "tier": 6, "vram_gb": 20, "tdp_w": 315, "length_mm": 320, "price_usd": 750, "bestbuy_sku": null, "search_term": "Radeon RX 7900 XT"},
+    {"id": "rtx-5080", "name": "NVIDIA GeForce RTX 5080 16GB", "brand": "NVIDIA", "tier": 7, "vram_gb": 16, "tdp_w": 360, "length_mm": 304, "price_usd": 1000, "bestbuy_sku": null, "search_term": "GeForce RTX 5080"},
+    {"id": "rtx-5090", "name": "NVIDIA GeForce RTX 5090 32GB", "brand": "NVIDIA", "tier": 8, "vram_gb": 32, "tdp_w": 575, "length_mm": 341, "price_usd": 2000, "bestbuy_sku": null, "search_term": "GeForce RTX 5090"}
+  ],
+  "cpus": [
+    {"id": "r5-5500", "name": "AMD Ryzen 5 5500", "brand": "AMD", "tier": 1, "socket": "AM4", "ddr": ["DDR4"], "tdp_w": 65, "includes_cooler": true, "price_usd": 85, "bestbuy_sku": null, "search_term": "Ryzen 5 5500"},
+    {"id": "r5-5600", "name": "AMD Ryzen 5 5600", "brand": "AMD", "tier": 2, "socket": "AM4", "ddr": ["DDR4"], "tdp_w": 65, "includes_cooler": true, "price_usd": 130, "bestbuy_sku": null, "search_term": "Ryzen 5 5600"},
+    {"id": "i5-12400f", "name": "Intel Core i5-12400F", "brand": "Intel", "tier": 3, "socket": "LGA1700", "ddr": ["DDR4", "DDR5"], "tdp_w": 65, "includes_cooler": true, "price_usd": 150, "bestbuy_sku": null, "search_term": "Core i5-12400F"},
+    {"id": "r5-7600", "name": "AMD Ryzen 5 7600", "brand": "AMD", "tier": 3, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 65, "includes_cooler": true, "price_usd": 200, "bestbuy_sku": null, "search_term": "Ryzen 5 7600"},
+    {"id": "r5-7600x", "name": "AMD Ryzen 5 7600X", "brand": "AMD", "tier": 4, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 105, "includes_cooler": false, "price_usd": 220, "bestbuy_sku": null, "search_term": "Ryzen 5 7600X"},
+    {"id": "r7-7700x", "name": "AMD Ryzen 7 7700X", "brand": "AMD", "tier": 5, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 105, "includes_cooler": false, "price_usd": 300, "bestbuy_sku": null, "search_term": "Ryzen 7 7700X"},
+    {"id": "r7-9700x", "name": "AMD Ryzen 7 9700X", "brand": "AMD", "tier": 6, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 105, "includes_cooler": false, "price_usd": 380, "bestbuy_sku": null, "search_term": "Ryzen 7 9700X"},
+    {"id": "r9-7900x", "name": "AMD Ryzen 9 7900X", "brand": "AMD", "tier": 7, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 170, "includes_cooler": false, "price_usd": 450, "bestbuy_sku": null, "search_term": "Ryzen 9 7900X"},
+    {"id": "r9-9950x", "name": "AMD Ryzen 9 9950X", "brand": "AMD", "tier": 8, "socket": "AM5", "ddr": ["DDR5"], "tdp_w": 170, "includes_cooler": false, "price_usd": 600, "bestbuy_sku": null, "search_term": "Ryzen 9 9950X"}
+  ],
+  "motherboards": [
+    {"id": "a520m", "name": "Gigabyte A520M K V2", "socket": "AM4", "chipset": "A520", "ddr": "DDR4", "form_factor": "mATX", "price_usd": 70, "bestbuy_sku": null, "search_term": "A520M motherboard AM4"},
+    {"id": "b550m", "name": "MSI B550M PRO-VDH WIFI", "socket": "AM4", "chipset": "B550", "ddr": "DDR4", "form_factor": "mATX", "price_usd": 110, "bestbuy_sku": null, "search_term": "B550M PRO-VDH WIFI"},
+    {"id": "b550-tomahawk", "name": "MSI MAG B550 TOMAHAWK", "socket": "AM4", "chipset": "B550", "ddr": "DDR4", "form_factor": "ATX", "price_usd": 160, "bestbuy_sku": null, "search_term": "B550 TOMAHAWK"},
+    {"id": "b760m-ddr4", "name": "MSI PRO B760M-A DDR4", "socket": "LGA1700", "chipset": "B760", "ddr": "DDR4", "form_factor": "mATX", "price_usd": 120, "bestbuy_sku": null, "search_term": "B760M-A DDR4"},
+    {"id": "b760m-ddr5", "name": "MSI PRO B760M-A DDR5", "socket": "LGA1700", "chipset": "B760", "ddr": "DDR5", "form_factor": "mATX", "price_usd": 130, "bestbuy_sku": null, "search_term": "B760M-A DDR5"},
+    {"id": "b650m", "name": "Gigabyte B650M DS3H", "socket": "AM5", "chipset": "B650", "ddr": "DDR5", "form_factor": "mATX", "price_usd": 140, "bestbuy_sku": null, "search_term": "B650M DS3H"},
+    {"id": "b650-tomahawk", "name": "MSI MAG B650 TOMAHAWK WIFI", "socket": "AM5", "chipset": "B650", "ddr": "DDR5", "form_factor": "ATX", "price_usd": 200, "bestbuy_sku": null, "search_term": "B650 TOMAHAWK WIFI"},
+    {"id": "x670e", "name": "ASUS TUF Gaming X670E-PLUS WIFI", "socket": "AM5", "chipset": "X670E", "ddr": "DDR5", "form_factor": "ATX", "price_usd": 300, "bestbuy_sku": null, "search_term": "X670E-PLUS WIFI"}
+  ],
+  "ram": [
+    {"id": "ddr4-16", "name": "Corsair Vengeance LPX 16GB (2x8) DDR4-3200", "ddr": "DDR4", "capacity_gb": 16, "speed_mts": 3200, "price_usd": 35, "bestbuy_sku": null, "search_term": "Corsair Vengeance LPX 16GB DDR4"},
+    {"id": "ddr4-32", "name": "Corsair Vengeance LPX 32GB (2x16) DDR4-3600", "ddr": "DDR4", "capacity_gb": 32, "speed_mts": 3600, "price_usd": 60, "bestbuy_sku": null, "search_term": "Corsair Vengeance LPX 32GB DDR4"},
+    {"id": "ddr5-16", "name": "Kingston Fury Beast 16GB (2x8) DDR5-5600", "ddr": "DDR5", "capacity_gb": 16, "speed_mts": 5600, "price_usd": 50, "bestbuy_sku": null, "search_term": "Kingston Fury Beast 16GB DDR5"},
+    {"id": "ddr5-32", "name": "G.Skill Flare X5 32GB (2x16) DDR5-6000 CL30", "ddr": "DDR5", "capacity_gb": 32, "speed_mts": 6000, "price_usd": 95, "bestbuy_sku": null, "search_term": "G.Skill Flare X5 32GB DDR5-6000"},
+    {"id": "ddr5-64", "name": "Corsair Vengeance 64GB (2x32) DDR5-6000", "ddr": "DDR5", "capacity_gb": 64, "speed_mts": 6000, "price_usd": 180, "bestbuy_sku": null, "search_term": "Corsair Vengeance 64GB DDR5"}
+  ],
+  "storage": [
+    {"id": "nvme-500", "name": "WD Blue SN580 500GB NVMe SSD", "capacity_gb": 500, "pcie_gen": 4, "price_usd": 40, "bestbuy_sku": null, "search_term": "WD Blue SN580 500GB"},
+    {"id": "nvme-1tb", "name": "WD Black SN770 1TB NVMe SSD", "capacity_gb": 1000, "pcie_gen": 4, "price_usd": 70, "bestbuy_sku": null, "search_term": "WD Black SN770 1TB"},
+    {"id": "nvme-2tb", "name": "WD Black SN850X 2TB NVMe SSD", "capacity_gb": 2000, "pcie_gen": 4, "price_usd": 130, "bestbuy_sku": null, "search_term": "WD Black SN850X 2TB"},
+    {"id": "nvme-4tb", "name": "WD Black SN850X 4TB NVMe SSD", "capacity_gb": 4000, "pcie_gen": 4, "price_usd": 250, "bestbuy_sku": null, "search_term": "WD Black SN850X 4TB"}
+  ],
+  "psus": [
+    {"id": "psu-550", "name": "Corsair CV550 550W 80+ Bronze", "wattage": 550, "rating": "80+ Bronze", "price_usd": 55, "bestbuy_sku": null, "search_term": "Corsair CV550"},
+    {"id": "psu-650", "name": "Corsair RM650 650W 80+ Gold", "wattage": 650, "rating": "80+ Gold", "price_usd": 90, "bestbuy_sku": null, "search_term": "Corsair RM650"},
+    {"id": "psu-750", "name": "Corsair RM750x 750W 80+ Gold", "wattage": 750, "rating": "80+ Gold", "price_usd": 110, "bestbuy_sku": null, "search_term": "Corsair RM750x"},
+    {"id": "psu-850", "name": "Corsair RM850x 850W 80+ Gold", "wattage": 850, "rating": "80+ Gold", "price_usd": 140, "bestbuy_sku": null, "search_term": "Corsair RM850x"},
+    {"id": "psu-1000", "name": "Corsair RM1000x 1000W 80+ Gold", "wattage": 1000, "rating": "80+ Gold", "price_usd": 180, "bestbuy_sku": null, "search_term": "Corsair RM1000x"},
+    {"id": "psu-1200", "name": "Corsair RM1200x 1200W 80+ Gold", "wattage": 1200, "rating": "80+ Gold", "price_usd": 240, "bestbuy_sku": null, "search_term": "Corsair RM1200x"}
+  ],
+  "cases": [
+    {"id": "case-matx-compact", "name": "Fractal Design Pop Mini Air (mATX)", "supports_form_factors": ["mATX", "Mini-ITX"], "max_gpu_len_mm": 360, "max_cooler_height_mm": 170, "price_usd": 70, "bestbuy_sku": null, "search_term": "Fractal Pop Mini Air"},
+    {"id": "case-atx-mid", "name": "Phanteks XT Pro Ultra (ATX)", "supports_form_factors": ["ATX", "mATX", "Mini-ITX"], "max_gpu_len_mm": 415, "max_cooler_height_mm": 190, "price_usd": 100, "bestbuy_sku": null, "search_term": "Phanteks XT Pro Ultra"},
+    {"id": "case-atx-mid2", "name": "Lian Li Lancool 216 (ATX)", "supports_form_factors": ["ATX", "mATX", "Mini-ITX"], "max_gpu_len_mm": 392, "max_cooler_height_mm": 180, "price_usd": 110, "bestbuy_sku": null, "search_term": "Lancool 216"},
+    {"id": "case-atx-premium", "name": "Fractal Design North (ATX)", "supports_form_factors": ["ATX", "mATX", "Mini-ITX"], "max_gpu_len_mm": 355, "max_cooler_height_mm": 185, "price_usd": 140, "bestbuy_sku": null, "search_term": "Fractal North case"}
+  ],
+  "coolers": [
+    {"id": "cooler-axp90", "name": "Thermalright AXP90-X47 (low profile)", "sockets": ["AM4", "AM5", "LGA1700"], "tdp_capacity_w": 120, "height_mm": 47, "price_usd": 25, "bestbuy_sku": null, "search_term": "Thermalright AXP90"},
+    {"id": "cooler-pa120", "name": "Thermalright Peerless Assassin 120 SE", "sockets": ["AM4", "AM5", "LGA1700"], "tdp_capacity_w": 245, "height_mm": 155, "price_usd": 35, "bestbuy_sku": null, "search_term": "Peerless Assassin 120 SE"},
+    {"id": "cooler-aio240", "name": "Arctic Liquid Freezer III 240 AIO", "sockets": ["AM4", "AM5", "LGA1700"], "tdp_capacity_w": 350, "height_mm": 55, "price_usd": 85, "bestbuy_sku": null, "search_term": "Arctic Liquid Freezer III 240"}
+  ]
+}

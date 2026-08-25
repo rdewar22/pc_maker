@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "note": "Performance model. base_fps = estimated FPS at 1080p/high for a game with gpu_load=1.0. estimated_fps = base_fps[tier] * resolution_mult * settings_mult / game.gpu_load.",
+    "gpu_tier_base_fps": {"1": 28, "2": 45, "3": 70, "4": 92, "5": 115, "6": 140, "7": 165, "8": 195},
+    "resolution_mult": {"1080p": 1.0, "1440p": 0.68, "4k": 0.42},
+    "settings_mult": {"low": 1.6, "medium": 1.25, "high": 1.0, "ultra": 0.85},
+    "cpu_tier_rule": "required_cpu_tier = clamp(round(gpu_tier * game.cpu_load), 1, 8)"
+  }
+}
