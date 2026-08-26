@@ -280,14 +280,12 @@ function EbayLine({ part }) {
   const used = part.ebay?.used
   if (!used || used.median_price_usd == null) return null
   const url = used.buy_url || part.ebay?.buy_url
+  const href =
+    url || `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(part.name)}`
   return (
-    <a
-      className="ebay-line"
-      href={url || `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(part.name)}`}
-      target="_blank"
-      rel="noreferrer"
-    >
-      used on eBay ~${Math.round(used.median_price_usd).toLocaleString()}
+    <a className="ebay-line" href={href} target="_blank" rel="noreferrer">
+      <span className="ebay-tag">eBay</span> used ~$
+      {Math.round(used.median_price_usd).toLocaleString()}
       {used.listing_count ? ` (${used.listing_count} listings)` : ''} ↗
     </a>
   )
@@ -317,7 +315,7 @@ function BuildCard({ build }) {
           <span className="price">{formatUsd(build.total_price_usd)}</span>
           {usedTotal && (
             <span className="used-total">
-              used ~{formatUsd(usedTotal)}
+              eBay used ~{formatUsd(usedTotal)}
             </span>
           )}
           <span className="chevron">{open ? '▾' : '▸'}</span>
@@ -338,16 +336,6 @@ function BuildCard({ build }) {
                       </a>
                     ) : (
                       part.name
-                    )}
-                    {part.retail_urls?.newegg && (
-                      <a
-                        className="newegg-link"
-                        href={part.retail_urls.newegg}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Newegg
-                      </a>
                     )}
                     {part.live?.in_stock === true && (
                       <span className="in-stock">in stock</span>

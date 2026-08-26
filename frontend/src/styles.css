@@ -143,15 +143,29 @@ a:hover { text-decoration: underline; }
 .market-line:hover { text-decoration: underline; }
 
 .ebay-line {
-  display: block;
+  display: inline-block;
   font-size: 0.78rem;
-  color: #e5a13d;
+  color: #b5c7e6;
   margin-top: 0.15rem;
+  margin-right: 0.75rem;
+  text-decoration: none;
 }
-.ebay-line:hover { text-decoration: underline; }
+.ebay-line:hover .ebay-tag { filter: brightness(1.15); }
+
+.ebay-tag {
+  display: inline-block;
+  background: #e53238; /* eBay red */
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  padding: 0.08rem 0.4rem;
+  margin-right: 0.3rem;
+}
 
 .used-total {
-  color: #e5a13d;
+  color: #ff8a8f;
   font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;

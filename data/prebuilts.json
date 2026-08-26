@@ -1,15 +1,103 @@
 {
   "_meta": {
-    "note": "Curated prebuilt systems commonly stocked at major US retailers. gpu_tier/cpu_tier use the same 1-8 scale as the parts database so the performance model applies directly. price_usd is a baseline estimate — the UI always links to live retailer search pages for real pricing/stock."
+    "note": "Curated prebuilt systems commonly stocked at major US retailers. gpu_tier/cpu_tier use the same 1-8 scale as the parts database so the performance model applies directly. price_usd is a baseline estimate \u2014 the UI always links to live retailer search pages for real pricing/stock."
   },
   "prebuilts": [
-    {"id": "skytech-nebula-5500-4060", "name": "Skytech Nebula (Ryzen 5 5500, RTX 4060)", "brand": "Skytech", "gpu_tier": 3, "cpu_tier": 1, "vram_gb": 8, "ram_gb": 16, "storage_gb": 1000, "price_usd": 800, "search_term": "Skytech Nebula gaming PC RTX 4060"},
-    {"id": "skytech-azure-7600-5070", "name": "Skytech Azure (Ryzen 7 7600, RTX 5070)", "brand": "Skytech", "gpu_tier": 5, "cpu_tier": 3, "vram_gb": 12, "ram_gb": 32, "storage_gb": 1000, "price_usd": 1400, "search_term": "Skytech Azure gaming PC RTX 5070"},
-    {"id": "ibp-slatemesh-12400f-4060", "name": "iBUYPOWER SlateMesh (i5-12400F, RTX 4060)", "brand": "iBUYPOWER", "gpu_tier": 3, "cpu_tier": 3, "vram_gb": 8, "ram_gb": 16, "storage_gb": 1000, "price_usd": 900, "search_term": "iBUYPOWER SlateMesh RTX 4060"},
-    {"id": "ibp-tracemr-7700x-5070", "name": "iBUYPOWER TraceMR (Ryzen 7 7700X, RTX 5070)", "brand": "iBUYPOWER", "gpu_tier": 5, "cpu_tier": 5, "vram_gb": 12, "ram_gb": 32, "storage_gb": 2000, "price_usd": 1600, "search_term": "iBUYPOWER TraceMR RTX 5070"},
-    {"id": "cppc-gamer-supreme-7700x-7900xt", "name": "CyberPowerPC Gamer Supreme (Ryzen 7 7700X, RX 7900 XT)", "brand": "CyberPowerPC", "gpu_tier": 6, "cpu_tier": 5, "vram_gb": 20, "ram_gb": 32, "storage_gb": 2000, "price_usd": 1900, "search_term": "CyberPowerPC Gamer Supreme RX 7900 XT"},
-    {"id": "cppc-gamer-master-5600-6600", "name": "CyberPowerPC Gamer Master (Ryzen 5 5600, RX 6600)", "brand": "CyberPowerPC", "gpu_tier": 2, "cpu_tier": 2, "vram_gb": 8, "ram_gb": 16, "storage_gb": 500, "price_usd": 600, "search_term": "CyberPowerPC Gamer Master RX 6600"},
-    {"id": "skytech-osiris-9700x-5080", "name": "Skytech Osiris (Ryzen 7 9700X, RTX 5080)", "brand": "Skytech", "gpu_tier": 7, "cpu_tier": 6, "vram_gb": 16, "ram_gb": 32, "storage_gb": 2000, "price_usd": 2500, "search_term": "Skytech Osiris RTX 5080"},
-    {"id": "ibp-scale-9950x-5090", "name": "iBUYPOWER Scale (Ryzen 9 9950X, RTX 5090)", "brand": "iBUYPOWER", "gpu_tier": 8, "cpu_tier": 8, "vram_gb": 32, "ram_gb": 64, "storage_gb": 4000, "price_usd": 4200, "search_term": "iBUYPOWER RTX 5090 gaming PC"}
+    {
+      "id": "skytech-nebula-5500-4060",
+      "name": "Skytech Nebula (Ryzen 5 5500, RTX 4060)",
+      "brand": "Skytech",
+      "gpu_tier": 3,
+      "cpu_tier": 1,
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "storage_gb": 1000,
+      "price_usd": 800,
+      "search_term": "Skytech gaming PC RTX 4060"
+    },
+    {
+      "id": "skytech-azure-7600-5070",
+      "name": "Skytech Azure (Ryzen 7 7600, RTX 5070)",
+      "brand": "Skytech",
+      "gpu_tier": 5,
+      "cpu_tier": 3,
+      "vram_gb": 12,
+      "ram_gb": 32,
+      "storage_gb": 1000,
+      "price_usd": 1400,
+      "search_term": "Skytech gaming PC RTX 5070"
+    },
+    {
+      "id": "ibp-slatemesh-12400f-4060",
+      "name": "iBUYPOWER SlateMesh (i5-12400F, RTX 4060)",
+      "brand": "iBUYPOWER",
+      "gpu_tier": 3,
+      "cpu_tier": 3,
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "storage_gb": 1000,
+      "price_usd": 900,
+      "search_term": "iBUYPOWER gaming PC RTX 4060"
+    },
+    {
+      "id": "ibp-tracemr-7700x-5070",
+      "name": "iBUYPOWER TraceMR (Ryzen 7 7700X, RTX 5070)",
+      "brand": "iBUYPOWER",
+      "gpu_tier": 5,
+      "cpu_tier": 5,
+      "vram_gb": 12,
+      "ram_gb": 32,
+      "storage_gb": 2000,
+      "price_usd": 1600,
+      "search_term": "iBUYPOWER gaming PC RTX 5070"
+    },
+    {
+      "id": "cppc-gamer-supreme-7700x-7900xt",
+      "name": "CyberPowerPC Gamer Supreme (Ryzen 7 7700X, RX 7900 XT)",
+      "brand": "CyberPowerPC",
+      "gpu_tier": 6,
+      "cpu_tier": 5,
+      "vram_gb": 20,
+      "ram_gb": 32,
+      "storage_gb": 2000,
+      "price_usd": 1900,
+      "search_term": "CyberPowerPC gaming PC RX 7900 XT"
+    },
+    {
+      "id": "cppc-gamer-master-5600-6600",
+      "name": "CyberPowerPC Gamer Master (Ryzen 5 5600, RX 6600)",
+      "brand": "CyberPowerPC",
+      "gpu_tier": 2,
+      "cpu_tier": 2,
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "storage_gb": 500,
+      "price_usd": 600,
+      "search_term": "CyberPowerPC gaming PC RX 6600"
+    },
+    {
+      "id": "skytech-osiris-9700x-5080",
+      "name": "Skytech Osiris (Ryzen 7 9700X, RTX 5080)",
+      "brand": "Skytech",
+      "gpu_tier": 7,
+      "cpu_tier": 6,
+      "vram_gb": 16,
+      "ram_gb": 32,
+      "storage_gb": 2000,
+      "price_usd": 2500,
+      "search_term": "Skytech gaming PC RTX 5080"
+    },
+    {
+      "id": "ibp-scale-9950x-5090",
+      "name": "iBUYPOWER Scale (Ryzen 9 9950X, RTX 5090)",
+      "brand": "iBUYPOWER",
+      "gpu_tier": 8,
+      "cpu_tier": 8,
+      "vram_gb": 32,
+      "ram_gb": 64,
+      "storage_gb": 4000,
+      "price_usd": 4200,
+      "search_term": "iBUYPOWER gaming PC RTX 5090"
+    }
   ]
 }
