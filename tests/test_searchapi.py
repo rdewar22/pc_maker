@@ -123,6 +123,42 @@ class TestSearchApiPricer:
         assert len(calls) == 1
 
 
+class TestMerchantLinks:
+    def test_merchant_search_url_mapping(self):
+        from app import retail
+
+        assert retail.merchant_search_url("eBay", "RTX 4060") == \
+            "https://www.ebay.com/sch/i.html?_nkw=RTX+4060"
+        assert retail.merchant_search_url("Best Buy", "RTX 4060") == \
+            "https://www.bestbuy.com/site/searchpage.jsp?st=RTX+4060"
+        assert retail.merchant_search_url("Newegg.com", "RTX 4060") == \
+            "https://www.newegg.com/p/pl?d=RTX+4060"
+        assert retail.merchant_search_url("Walmart", "RTX 4060") == \
+            "https://www.walmart.com/search?q=RTX+4060"
+        assert retail.merchant_search_url("mystery-shop", "RTX 4060") is None
+
+    def test_market_buy_url_uses_direct_merchant(self, tmp_path):
+        p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
+        p._search = lambda q: [
+            make_result(300, seller="eBay", title="MSI GeForce RTX 4060 Ventus"),
+            make_result(320, seller="Walmart", title="GeForce RTX 4060 8GB"),
+        ]
+        part = {"id": "x", "name": "RTX 4060", "price_usd": 300, "search_term": "RTX 4060"}
+        info = p.lookup_part(part)
+        assert info["market"]["buy_url"] == \
+            "https://www.ebay.com/sch/i.html?_nkw=RTX+4060"
+
+    def test_unknown_merchant_falls_back_to_google(self, tmp_path):
+        p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
+        p._search = lambda q: [
+            make_result(300, seller="Mystery Shop", link="https://www.google.com/search?ibp=oshop",
+                        title="MSI GeForce RTX 4060"),
+        ]
+        part = {"id": "x", "name": "RTX 4060", "price_usd": 300, "search_term": "RTX 4060"}
+        info = p.lookup_part(part)
+        assert info["market"]["buy_url"].startswith("https://www.google.com")
+
+
 class TestPrecedenceChain:
     def _market_with(self, tmp_path, results):
         m = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")

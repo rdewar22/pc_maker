@@ -24,6 +24,8 @@ import httpx
 
 from dotenv import load_dotenv
 
+from app import retail
+
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 SEARCH_URL = "https://www.searchapi.io/api/v1/search"
@@ -87,22 +89,26 @@ def _percentile(sorted_values: list, pct: float) -> float:
     return sorted_values[lo] * (1 - frac) + sorted_values[hi] * frac
 
 
-def _market_summary(offers: list) -> dict:
+def _market_summary(offers: list, query: str = "") -> dict:
     """Aggregate merchant offers.
 
     Google Shopping mixes product variants (capacities, kit sizes, bundles) in one
     result set, so the raw median overprices the base product. We report the 25th
     percentile of the outlier-filtered offers as the market price — the cheap
     cluster matches the product searched for; upgrades and bundles sit above it.
+
+    `buy_url` points at the cheapest offer's own retailer when we can map the
+    merchant, otherwise falls back to the raw (Google Shopping) link.
     """
     kept = _filter_outliers(offers) or offers
     prices = sorted(o["price"] for o in kept)
     cheapest = min(kept, key=lambda o: o["price"])
+    direct = retail.merchant_search_url(cheapest["merchant"], query)
     return {
         "market_price_usd": round(_percentile(prices, 0.25), 2),
         "best_price_usd": cheapest["price"],
         "best_merchant": cheapest["merchant"],
-        "buy_url": cheapest["buy_url"],
+        "buy_url": direct or cheapest["buy_url"],
         "matched_title": cheapest["title"],
         "offer_count": len(offers),
     }
@@ -220,7 +226,7 @@ class SearchApiPricer:
                         "title": title,
                     }
                 )
-            market = _market_summary(offers) if offers else None
+            market = _market_summary(offers, query) if offers else None
             baseline = part.get("price_usd")
             if market and baseline and market["best_price_usd"] > 2.5 * baseline:
                 market = None  # variant pollution; don't trust the match

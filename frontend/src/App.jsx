@@ -279,11 +279,14 @@ function MarketLine({ part }) {
 function EbayLine({ part }) {
   const used = part.ebay?.used
   if (!used || used.median_price_usd == null) return null
-  const url = used.buy_url || part.ebay?.buy_url
-  const href =
-    url || `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(part.name)}`
+  const query = part.search_term || part.name
   return (
-    <a className="ebay-line" href={href} target="_blank" rel="noreferrer">
+    <a
+      className="ebay-line"
+      href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}`}
+      target="_blank"
+      rel="noreferrer"
+    >
       <span className="ebay-tag">eBay</span> used ~$
       {Math.round(used.median_price_usd).toLocaleString()}
       {used.listing_count ? ` (${used.listing_count} listings)` : ''} ↗
