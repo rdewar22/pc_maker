@@ -34,7 +34,7 @@ SHOW_FIELDS = "sku,name,salePrice,onlineAvailability,addToCartUrl,condition"
 class BestBuyPricer:
     def __init__(self, api_key: str = None, cache_path: Path = CACHE_PATH,
                  cache_ttl: int = CACHE_TTL_SECONDS):
-        self.api_key = api_key or os.environ.get("BESTBUY_API_KEY", "")
+        self.api_key = api_key if api_key is not None else os.environ.get("BESTBUY_API_KEY", "")
         self.cache_ttl = cache_ttl
         self.cache_path = cache_path
         self._cache = self._load_cache()
@@ -168,8 +168,10 @@ class BestBuyPricer:
                     and market is not None and market.enabled):
                 part["shopping"] = market.lookup_part(part)
                 m = part["shopping"].get("market")
-                if m and m.get("median_price_usd") is not None:
-                    part["effective_price_usd"] = m["median_price_usd"]
+                # For query-based aggregation the cheapest filtered offer matches
+                # the searched product; higher prices are usually bigger variants.
+                if m and m.get("best_price_usd") is not None:
+                    part["effective_price_usd"] = m["best_price_usd"]
                     part["price_source"] = "market"
             if part["effective_price_usd"] is None:
                 part["effective_price_usd"] = part["price_usd"]
@@ -190,6 +192,8 @@ class BestBuyPricer:
         """
         all_parts = [p for b in result.get("builds", []) for p in b["parts"].values() if p]
         self.warm_skus(all_parts)
+        if market is not None and market.enabled:
+            market.warm_queries(all_parts)
         enriched = {}
         for part in all_parts:
             if part["id"] not in enriched:

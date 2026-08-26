@@ -106,8 +106,7 @@ def cmd_build(args):
                 print(
                     f"  {'':14}   └ cheapest across retailers ${m['best_price_usd']:,.0f}"
                     f" at {m['best_merchant']} ({m['offer_count']} offers)"
-                )
-        print(f"  {'TOTAL':14} {'':48} ${build['total_price_usd']:7,.0f}")
+                )        print(f"  {'TOTAL':14} {'':48} ${build['total_price_usd']:7,.0f}")
     if result.get("prebuilts"):
         print("\nPREBUILT ALTERNATIVES")
         print("-" * 64)

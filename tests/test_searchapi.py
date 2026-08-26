@@ -1,11 +1,16 @@
 import pytest
 
-from app.searchapi import SearchApiPricer, _filter_outliers, _parse_price
+from app.searchapi import (SearchApiPricer, _filter_outliers, _model_tokens,
+                           _parse_price, _title_has_token)
 
 
-def make_result(price, source="Walmart", link="https://walmart.com/x", title="Thing"):
-    return {"source": source, "link": link, "title": title,
-            "price": f"${price:,.2f}", "extracted_price": price}
+def make_result(price, source="Walmart", link="https://walmart.com/x",
+                title="Thing", seller=None):
+    r = {"source": source, "link": link, "title": title,
+         "price": f"${price:,.2f}", "extracted_price": price}
+    if seller:
+        r["seller"] = seller
+    return r
 
 
 class TestPriceParsing:
@@ -18,6 +23,21 @@ class TestPriceParsing:
     def test_garbage(self):
         assert _parse_price("n/a") is None
         assert _parse_price(None) is None
+
+
+class TestModelTokens:
+    def test_extracts_model_numbers(self):
+        assert _model_tokens("Corsair CV550 550W") == ["cv550", "550w"]
+        assert _model_tokens("GeForce RTX 4060") == ["4060"]
+
+    def test_ignores_short_and_alpha_tokens(self):
+        assert _model_tokens("Ryzen 5 7600X") == ["7600x"]
+        assert _model_tokens("Fractal Pop Mini Air") == []
+
+    def test_title_token_boundaries(self):
+        assert _title_has_token("MSI GeForce RTX 4060 Ventus", "4060")
+        assert not _title_has_token("MSI GeForce RTX 4060 Ti 16GB", "4060")
+        assert not _title_has_token("Corsair CX550 Power Supply", "cv550")
 
 
 class TestOutliers:
@@ -43,21 +63,21 @@ class TestSearchApiPricer:
     def test_lookup_with_mocked_search(self, tmp_path):
         p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
         p._search = lambda q: [
-            make_result(280, "Walmart"),
-            make_result(300, "Best Buy"),
-            make_result(320, "Newegg"),
-            make_result(5, "SketchyShop"),   # outlier, filtered
-            make_result(5000, "ScalperInc"),  # outlier, filtered
+            make_result(280, seller="Walmart", title="MSI GeForce RTX 4060 Ventus 2X"),
+            make_result(300, seller="Best Buy", title="GeForce RTX 4060 8GB"),
+            make_result(320, seller="Newegg", title="NVIDIA RTX 4060"),
+            make_result(5, seller="SketchyShop", title="RTX 4060 sticker"),   # outlier price
+            make_result(5000, seller="ScalperInc", title="RTX 4060 bundle"),  # outlier price
+            make_result(450, seller="Newegg", title="GeForce RTX 4060 Ti 16GB"),  # wrong product
         ]
         part = {"id": "x", "name": "RTX 4060", "price_usd": 300, "search_term": "RTX 4060"}
         info = p.lookup_part(part)
         assert info["price_source"] == "searchapi"
         m = info["market"]
-        assert m["median_price_usd"] == 300
+        assert m["market_price_usd"] == 290  # p25 of [280,300,320]
         assert m["best_price_usd"] == 280
         assert m["best_merchant"] == "Walmart"
-        assert m["offer_count"] == 5
-
+        assert m["offer_count"] == 5  # the 4060 Ti offer was filtered out
     def test_no_offers(self, tmp_path):
         p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
         p._search = lambda q: []
@@ -65,13 +85,33 @@ class TestSearchApiPricer:
         info = p.lookup_part(part)
         assert info["market"] is None
 
-    def test_search_error_returns_empty(self, tmp_path):
+    def test_search_error_returns_empty(self, tmp_path, monkeypatch):
+        import httpx
+
+        def boom(*a, **kw):
+            raise httpx.ConnectError("no network in tests")
+
+        monkeypatch.setattr(httpx, "get", boom)
         p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
-        p._search = None  # force the real _search, which has no valid key path
-        # simulate httpx failure by disabling the key post-hoc
-        p.api_key = "key"
-        results = SearchApiPricer._search(p, "x")
-        assert results == []
+        assert p._search("whatever") == []
+        part = {"id": "x", "name": "Thing", "price_usd": 100, "search_term": "Thing"}
+        info = p.lookup_part(part)
+        assert info["market"] is None
+
+    def test_variant_pollution_discarded(self, tmp_path):
+        # cheapest offer is 4.4x the baseline -> match is discarded
+        p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
+        p._search = lambda q: [make_result(220), make_result(240), make_result(260)]
+        part = {"id": "x", "name": "16GB RAM kit", "price_usd": 50, "search_term": "16GB RAM kit"}
+        info = p.lookup_part(part)
+        assert info["market"] is None
+
+    def test_plausible_market_kept(self, tmp_path):
+        p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
+        p._search = lambda q: [make_result(220), make_result(240), make_result(260)]
+        part = {"id": "x", "name": "GPU", "price_usd": 300, "search_term": "GPU"}
+        info = p.lookup_part(part)
+        assert info["market"]["best_price_usd"] == 220
 
     def test_lookup_cached(self, tmp_path):
         p = SearchApiPricer(api_key="key", cache_path=tmp_path / "s.json")
@@ -104,12 +144,17 @@ class TestPrecedenceChain:
         from app.pricing import BestBuyPricer
         from app.data import find_part
 
-        part = find_part("gpus", "rx-6600")
-        market = self._market_with(tmp_path, [make_result(200), make_result(210), make_result(220)])
+        part = find_part("gpus", "rx-6600")  # search_term 'Radeon RX 6600' -> token '6600'
+        market = self._market_with(tmp_path, [
+            make_result(200, title="AMD Radeon RX 6600 8GB"),
+            make_result(210, title="AMD Radeon RX 6600"),
+            make_result(220, title="Radeon RX 6600 Gaming"),
+        ])
         bb = BestBuyPricer(api_key="", cache_path=tmp_path / "bb.json")
         bb.enrich_part(part, ebay=None, market=market)
         assert part["price_source"] == "market"
-        assert part["effective_price_usd"] == 210
+        assert part["effective_price_usd"] == 200  # cheapest filtered offer
+        assert part["shopping"]["market"]["market_price_usd"] == 205
         assert part["shopping"]["market"]["best_price_usd"] == 200
 
     def test_ebay_wins_over_market(self, tmp_path):
@@ -117,7 +162,11 @@ class TestPrecedenceChain:
         from app.data import find_part
 
         part = find_part("gpus", "rx-6600")
-        market = self._market_with(tmp_path, [make_result(200), make_result(210), make_result(220)])
+        market = self._market_with(tmp_path, [
+            make_result(200, title="AMD Radeon RX 6600 8GB"),
+            make_result(210, title="AMD Radeon RX 6600"),
+            make_result(220, title="Radeon RX 6600 Gaming"),
+        ])
         ebay = self._ebay_with(tmp_path, [
             {"price": {"value": "190"}, "condition": "New", "itemWebUrl": "u",
              "title": "t", "pricingModel": "FIXED_PRICE"},
@@ -129,7 +178,7 @@ class TestPrecedenceChain:
         assert part["price_source"] == "ebay"
         assert part["effective_price_usd"] == 192.5
         # market data still attached for the UI
-        assert part["shopping"]["market"]["median_price_usd"] == 210
+        assert part["shopping"]["market"]["market_price_usd"] == 205
 
     def test_bestbuy_wins_over_everything(self, tmp_path):
         from app.pricing import BestBuyPricer

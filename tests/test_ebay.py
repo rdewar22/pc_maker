@@ -62,6 +62,18 @@ class TestSummarize:
 
 
 class TestEbayPricer:
+    def test_sandbox_detection(self, tmp_path):
+        p = EbayPricer(client_id="User-app-SBX-1234", client_secret="SBX-abc",
+                       cache_path=tmp_path / "e.json")
+        assert p.sandbox
+        assert p._token_url == "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
+        assert "sandbox" in p._search_url
+
+        q = EbayPricer(client_id="User-app-PRD-5678", client_secret="xyz",
+                       cache_path=tmp_path / "e2.json")
+        assert not q.sandbox
+        assert q._token_url == "https://api.ebay.com/identity/v1/oauth2/token"
+
     def test_disabled_lookup(self, tmp_path):
         p = EbayPricer(client_id="", client_secret="", cache_path=tmp_path / "e.json")
         assert not p.enabled

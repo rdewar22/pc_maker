@@ -28,6 +28,8 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+SANDBOX_TOKEN_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
+SANDBOX_SEARCH_URL = "https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search"
 API_SCOPE = "https://api.ebay.com/oauth/api_scope"
 CACHE_TTL_SECONDS = 3600
 CACHE_PATH = Path(__file__).resolve().parent.parent / ".cache" / "ebay.json"
@@ -88,8 +90,8 @@ def _summarize(items: list) -> dict | None:
 class EbayPricer:
     def __init__(self, client_id: str = None, client_secret: str = None,
                  cache_path: Path = CACHE_PATH, cache_ttl: int = CACHE_TTL_SECONDS):
-        self.client_id = client_id or os.environ.get("EBAY_CLIENT_ID", "")
-        self.client_secret = client_secret or os.environ.get("EBAY_CLIENT_SECRET", "")
+        self.client_id = client_id if client_id is not None else os.environ.get("EBAY_CLIENT_ID", "")
+        self.client_secret = client_secret if client_secret is not None else os.environ.get("EBAY_CLIENT_SECRET", "")
         self.cache_ttl = cache_ttl
         self.cache_path = cache_path
         self._cache = self._load_cache()
@@ -99,6 +101,19 @@ class EbayPricer:
     @property
     def enabled(self) -> bool:
         return bool(self.client_id and self.client_secret)
+
+    @property
+    def sandbox(self) -> bool:
+        """Sandbox keys are auto-detected from the '-SBX-' marker in the client id."""
+        return "-sbx-" in (self.client_id or "").lower()
+
+    @property
+    def _token_url(self) -> str:
+        return SANDBOX_TOKEN_URL if self.sandbox else TOKEN_URL
+
+    @property
+    def _search_url(self) -> str:
+        return SANDBOX_SEARCH_URL if self.sandbox else SEARCH_URL
 
     # -- cache -----------------------------------------------------------
 
@@ -133,7 +148,7 @@ class EbayPricer:
             return self._token
         try:
             resp = httpx.post(
-                TOKEN_URL,
+                self._token_url,
                 auth=(self.client_id, self.client_secret),
                 data={"grant_type": "client_credentials", "scope": API_SCOPE},
                 timeout=REQUEST_TIMEOUT,
@@ -155,7 +170,7 @@ class EbayPricer:
             return []
         try:
             resp = httpx.get(
-                SEARCH_URL,
+                self._search_url,
                 headers={"Authorization": f"Bearer {token}"},
                 params={
                     "q": query,

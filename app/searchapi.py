@@ -15,6 +15,7 @@ Design notes:
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 from statistics import median
@@ -28,7 +29,9 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 SEARCH_URL = "https://www.searchapi.io/api/v1/search"
 CACHE_TTL_SECONDS = 21600  # 6h: free tier is small, cache harder
 CACHE_PATH = Path(__file__).resolve().parent.parent / ".cache" / "searchapi.json"
-REQUEST_TIMEOUT = 6.0
+# Google Shopping is a live-scraping engine: queries regularly take 10-25s.
+REQUEST_TIMEOUT = 35.0
+MAX_CONCURRENT_LOOKUPS = 6
 
 
 def _parse_price(value) -> float | None:
@@ -43,6 +46,29 @@ def _parse_price(value) -> float | None:
         return None
 
 
+def _model_tokens(query: str) -> list:
+    """Discriminating tokens from a query: alphanumeric tokens that contain digits.
+
+    e.g. 'Corsair CV550 550W' -> ['cv550', '550w']; 'GeForce RTX 4060' -> ['4060'].
+    These distinguish the exact product from siblings (CX550 vs CV550, 4060 Ti vs 4060).
+    """
+    tokens = []
+    for tok in re.findall(r"[a-z0-9]+", query.lower()):
+        if len(tok) >= 3 and any(c.isdigit() for c in tok) and tok not in tokens:
+            tokens.append(tok)
+    return tokens
+
+
+def _title_has_token(title: str, token: str) -> bool:
+    """Token appears in title on non-alphanumeric boundaries (4060 != 4060ti),
+    and is not a pricier sibling SKU like '4060 Ti' or '4060 Super'."""
+    m = re.search(rf"(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])", title.lower())
+    if not m:
+        return False
+    after = title.lower()[m.end():]
+    return re.match(r"\s+(ti|super)\b", after) is None
+
+
 def _filter_outliers(offers: list) -> list:
     if len(offers) < 3:
         return offers
@@ -50,10 +76,42 @@ def _filter_outliers(offers: list) -> list:
     return [o for o in offers if 0.5 * med <= o["price"] <= 2.0 * med]
 
 
+def _percentile(sorted_values: list, pct: float) -> float:
+    """Linear-interpolated percentile of already-sorted values."""
+    if len(sorted_values) == 1:
+        return sorted_values[0]
+    rank = pct * (len(sorted_values) - 1)
+    lo = int(rank)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    frac = rank - lo
+    return sorted_values[lo] * (1 - frac) + sorted_values[hi] * frac
+
+
+def _market_summary(offers: list) -> dict:
+    """Aggregate merchant offers.
+
+    Google Shopping mixes product variants (capacities, kit sizes, bundles) in one
+    result set, so the raw median overprices the base product. We report the 25th
+    percentile of the outlier-filtered offers as the market price — the cheap
+    cluster matches the product searched for; upgrades and bundles sit above it.
+    """
+    kept = _filter_outliers(offers) or offers
+    prices = sorted(o["price"] for o in kept)
+    cheapest = min(kept, key=lambda o: o["price"])
+    return {
+        "market_price_usd": round(_percentile(prices, 0.25), 2),
+        "best_price_usd": cheapest["price"],
+        "best_merchant": cheapest["merchant"],
+        "buy_url": cheapest["buy_url"],
+        "matched_title": cheapest["title"],
+        "offer_count": len(offers),
+    }
+
+
 class SearchApiPricer:
     def __init__(self, api_key: str = None, cache_path: Path = CACHE_PATH,
                  cache_ttl: int = CACHE_TTL_SECONDS):
-        self.api_key = api_key or os.environ.get("SEARCHAPI_API_KEY", "")
+        self.api_key = api_key if api_key is not None else os.environ.get("SEARCHAPI_API_KEY", "")
         self.cache_ttl = cache_ttl
         self.cache_path = cache_path
         self._cache = self._load_cache()
@@ -109,8 +167,31 @@ class SearchApiPricer:
         except (httpx.HTTPError, json.JSONDecodeError):
             return []
 
+    def warm_queries(self, parts: list) -> None:
+        """Concurrently pre-fetch market data for all uncached parts."""
+        from concurrent.futures import ThreadPoolExecutor
+
+        uncached = []
+        seen = set()
+        for part in parts:
+            query = part.get("search_term") or part["name"]
+            if query in seen:
+                continue
+            seen.add(query)
+            if self._cached(f"q:{query}") is None:
+                uncached.append(part)
+        if not uncached:
+            return
+        with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_LOOKUPS) as pool:
+            list(pool.map(self.lookup_part, uncached))
+
     def lookup_part(self, part: dict) -> dict:
-        """Multi-retailer market pricing for a part."""
+        """Multi-retailer market pricing for a part.
+
+        Includes a plausibility guard: if even the cheapest filtered offer costs
+        more than 2.5x the curated baseline, the search results are dominated by
+        different product variants — the match is discarded rather than trusted.
+        """
         query = part.get("search_term") or part["name"]
         cache_key = f"q:{query}"
         cached = self._cached(cache_key)
@@ -121,30 +202,28 @@ class SearchApiPricer:
             result = {"enabled": False, "market": None, "price_source": "baseline"}
         else:
             offers = []
+            model_tokens = _model_tokens(query)
             for r in self._search(query):
                 price = _parse_price(r.get("extracted_price", r.get("price")))
                 if price is None or price <= 0:
                     continue
+                title = r.get("title", "")
+                if model_tokens and not all(
+                    _title_has_token(title, t) for t in model_tokens
+                ):
+                    continue  # wrong/sibling product
                 offers.append(
                     {
                         "price": price,
-                        "merchant": r.get("source", "retailer"),
+                        "merchant": r.get("seller") or r.get("source") or "retailer",
                         "buy_url": r.get("link") or r.get("product_link"),
-                        "title": r.get("title", ""),
+                        "title": title,
                     }
                 )
-            market = None
-            if offers:
-                kept = _filter_outliers(offers) or offers
-                cheapest = min(kept, key=lambda o: o["price"])
-                market = {
-                    "median_price_usd": round(median(o["price"] for o in kept), 2),
-                    "best_price_usd": cheapest["price"],
-                    "best_merchant": cheapest["merchant"],
-                    "buy_url": cheapest["buy_url"],
-                    "matched_title": cheapest["title"],
-                    "offer_count": len(offers),
-                }
+            market = _market_summary(offers) if offers else None
+            baseline = part.get("price_usd")
+            if market and baseline and market["best_price_usd"] > 2.5 * baseline:
+                market = None  # variant pollution; don't trust the match
             result = {"enabled": True, "market": market, "price_source": "searchapi"}
         self._store(cache_key, result)
         return result
